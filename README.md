@@ -32,6 +32,13 @@ driving adapters onto the same inbound port, and PostgreSQL and the external
 time tracking system sit behind outbound ports. See
 [docs/02-architecture.md](./docs/02-architecture.md).
 
+For a single value per employee and month this is more structure than strictly
+necessary. It was chosen because the same data is written through two
+independent channels and has to stay consistent when they collide — that rule
+is implemented once and both adapters share it, and it can be tested without a
+database. The trade-off is discussed in
+[ADR 0005](./docs/adr/0005-hexagonal-architecture.md).
+
 ## Getting started
 
 ```shell
