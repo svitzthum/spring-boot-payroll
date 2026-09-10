@@ -48,8 +48,9 @@ the value is persisted in PostgreSQL, and the behaviour is covered by tests.
 4. **Persistence adapter** (`adapter.out.persistence`) — Flyway migrations
    `V1__init.sql` (three tables, foreign keys, unique index, check constraints)
    and `V2__demo_data.sql`; JPA entities, `YearMonth` converter, JPA auditing,
-   Spring Data repositories, mapper, and the port implementation that translates
-   constraint violations into a domain level conflict.
+   Spring Data repositories, mapper, and the port implementations. Conflicts are
+   detected before the flush by comparing the version, and constraint violations
+   from the flush are translated into `WorkingHoursConflictException`.
 5. **Web adapter** (`adapter.in.web`) — controller, request and response records
    using ISO 8601 durations, a `@WholeMinutes` validation constraint, Jackson
    configured to serialise `Duration` as an ISO string, and exception handling
@@ -68,6 +69,7 @@ the value is persisted in PostgreSQL, and the behaviour is covered by tests.
 | `spring-boot-starter-validation` | `implementation` | Bean Validation on request payloads |
 | `spring-boot-starter-actuator` | `implementation` | health endpoint for the Compose setup |
 | `org.flywaydb:flyway-core` | `implementation` | schema migrations |
+| `spring-boot-flyway` | `implementation` | Flyway auto-configuration, a separate module since Boot 4 |
 | `org.flywaydb:flyway-database-postgresql` | `runtimeOnly` | PostgreSQL support for Flyway |
 | `spring-boot-docker-compose` | `developmentOnly` | starts the database on `bootRun` |
 | `spring-boot-testcontainers` | `testImplementation` | `@ServiceConnection` wiring |

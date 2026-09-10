@@ -11,6 +11,9 @@ public interface WorkingHoursRepository {
 
 	Optional<MonthlyWorkingHours> find(UUID employeeId, YearMonth period);
 
+	/**
+	 * Returns all months of the given year, ordered by period ascending.
+	 */
 	List<MonthlyWorkingHours> findByYear(UUID employeeId, int year);
 
 	/**

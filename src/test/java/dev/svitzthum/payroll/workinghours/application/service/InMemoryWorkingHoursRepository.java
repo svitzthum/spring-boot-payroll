@@ -2,6 +2,7 @@ package dev.svitzthum.payroll.workinghours.application.service;
 
 import java.time.YearMonth;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +40,7 @@ class InMemoryWorkingHoursRepository implements WorkingHoursRepository {
 				found.add(copyOf(value));
 			}
 		});
+		found.sort(Comparator.comparing(MonthlyWorkingHours::period));
 		return List.copyOf(found);
 	}
 
