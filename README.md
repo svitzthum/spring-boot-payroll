@@ -50,6 +50,47 @@ docker compose up -d   # PostgreSQL
 ./gradlew build        # includes integration tests via Testcontainers
 ```
 
+## Trying it out
+
+The migrations create three demo employees, so the endpoints can be used right
+after `bootRun`. `22222222-2222-2222-2222-222222222221` is active,
+`22222222-2222-2222-2222-222222222223` has left the company.
+
+Record the hours worked in August 2026, as an ISO 8601 duration:
+
+```shell
+curl -X PUT localhost:8080/api/v1/employees/22222222-2222-2222-2222-222222222221/working-hours/2026-08 \
+  -H 'Content-Type: application/json' \
+  -d '{"workedTime": "PT152H30M"}'
+```
+
+```json
+{"employeeId":"22222222-2222-2222-2222-222222222221","period":"2026-08","workedTime":"PT152H30M","source":"MANUAL"}
+```
+
+Repeating the call with a different value corrects the month instead of adding a
+second entry — the value is absolute, so the endpoint is idempotent.
+
+Read a single month, or all months of a year:
+
+```shell
+curl localhost:8080/api/v1/employees/22222222-2222-2222-2222-222222222221/working-hours/2026-08
+curl 'localhost:8080/api/v1/employees/22222222-2222-2222-2222-222222222221/working-hours?year=2026'
+```
+
+Rejected requests are answered as `application/problem+json`, for example when
+recording time for an employee who has left:
+
+```shell
+curl -X PUT localhost:8080/api/v1/employees/22222222-2222-2222-2222-222222222223/working-hours/2026-08 \
+  -H 'Content-Type: application/json' \
+  -d '{"workedTime": "PT152H30M"}'
+```
+
+```json
+{"title": "Employee is not active", "status": 400, "detail": "employee 2222…2223 is not active"}
+```
+
 ## Documentation
 
 The planning documents, the data model and the architecture decision records
