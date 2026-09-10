@@ -1,3 +1,28 @@
 spring:
   application:
     name: payroll
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  flyway:
+    locations: classpath:db/migration
+  jackson:
+    datatype:
+      datetime:
+        # serialise java.time.Duration as ISO 8601 (PT152H30M) instead of numeric seconds
+        write-durations-as-timestamps: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+logging:
+  level:
+    dev.svitzthum.payroll: DEBUG

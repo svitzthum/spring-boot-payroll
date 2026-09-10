@@ -72,7 +72,7 @@ the value is persisted in PostgreSQL, and the behaviour is covered by tests.
 | `org.flywaydb:flyway-database-postgresql` | `runtimeOnly` | PostgreSQL support for Flyway |
 | `spring-boot-docker-compose` | `developmentOnly` | starts the database on `bootRun` |
 | `spring-boot-testcontainers` | `testImplementation` | `@ServiceConnection` wiring |
-| `org.testcontainers:postgresql`, `:junit-jupiter` | `testImplementation` | PostgreSQL container in tests |
+| `org.testcontainers:testcontainers-postgresql`, `:testcontainers-junit-jupiter` | `testImplementation` | PostgreSQL container in tests |
 | `com.tngtech.archunit:archunit-junit5` | `testImplementation` | enforce the hexagon dependency rule |
 
 The starters `spring-boot-starter-webmvc` and `spring-boot-starter-data-jpa`
@@ -92,7 +92,7 @@ Docker Compose support and Testcontainers behave consistently.
 | `spring.jpa.open-in-view` | `false` | no lazy loading outside the transaction; the adapter maps to domain objects anyway |
 | `spring.jpa.properties.hibernate.jdbc.time_zone` | `UTC` | deterministic timestamps |
 | `spring.flyway.locations` | `classpath:db/migration` | explicit migration location |
-| `spring.jackson.serialization.write-durations-as-timestamps` | `false` | required for `PT152H30M` instead of numeric seconds ([ADR 0003](./adr/0003-store-durations-as-minutes.md)) |
+| `spring.jackson.datatype.datetime.write-durations-as-timestamps` | `false` | required for `PT152H30M` instead of numeric seconds ([ADR 0003](./adr/0003-store-durations-as-minutes.md)) |
 | `management.endpoints.web.exposure.include` | `health,info` | minimal actuator surface |
 
 No datasource URL is configured for local development — Docker Compose support
