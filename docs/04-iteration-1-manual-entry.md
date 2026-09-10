@@ -38,9 +38,8 @@ the value is persisted in PostgreSQL, and the behaviour is covered by tests.
    PostgreSQL service; configure `application.yaml` (`ddl-auto: validate`,
    `open-in-view: false`, Flyway, logging).
 2. **Domain** (`workinghours.domain`) — `MonthlyWorkingHours` aggregate with
-   `WorkDuration`, `AccountingPeriod`, `EmployeeId` and `WorkingHoursSource`.
-   The invariants (non-negative duration, plausible upper bound, normalised
-   period) live here and are unit tested without Spring.
+   `WorkDuration` and `WorkingHoursSource`, unit tested without Spring.
+   Employee (`UUID`), period (`YearMonth`) and version (`long`) stay JDK types.
 3. **Application** (`workinghours.application`) — inbound ports
    `RecordWorkingHoursUseCase` and `GetWorkingHoursQuery` with their command
    records, outbound ports `WorkingHoursRepository` and `EmployeeDirectory`, and

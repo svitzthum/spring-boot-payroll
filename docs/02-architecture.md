@@ -24,7 +24,7 @@ flowchart LR
     subgraph core["Application core"]
         IN["Inbound ports<br/>RecordWorkingHours / GetWorkingHours"]
         APP["Application services"]
-        DOM["Domain model<br/>MonthlyWorkingHours, WorkDuration, Period"]
+        DOM["Domain model<br/>MonthlyWorkingHours, WorkDuration"]
         OUT["Outbound ports<br/>WorkingHoursRepository, EmployeeDirectory, TimeTrackingSource"]
         IN --> APP --> DOM
         APP --> OUT
@@ -54,9 +54,7 @@ dev.svitzthum.payroll
 │   ├── domain                          ← no framework dependencies at all
 │   │   ├── MonthlyWorkingHours         ← aggregate, holds the invariants
 │   │   ├── WorkDuration                ← value object, whole minutes, built from java.time.Duration
-│   │   ├── AccountingPeriod            ← value object (YearMonth)
-│   │   ├── WorkingHoursSource          ← MANUAL | TIME_TRACKING
-│   │   └── EmployeeId
+│   │   └── WorkingHoursSource          ← MANUAL | TIME_TRACKING
 │   ├── application
 │   │   ├── port/in                     ← use case interfaces + commands
 │   │   ├── port/out                    ← repository / directory interfaces

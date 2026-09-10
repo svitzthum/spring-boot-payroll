@@ -5,9 +5,9 @@
 This document describes the **relational schema owned by the persistence
 adapter** (`adapter.out.persistence`), not the domain model. Following
 [ADR 0005](./adr/0005-hexagonal-architecture.md), the domain works with its own
-types (`MonthlyWorkingHours`, `WorkDuration`, `AccountingPeriod`) and never sees
-a JPA entity; a mapper translates between the two. Technical columns such as
-`version` therefore exist in the schema but not in the domain model.
+types (`MonthlyWorkingHours`, `WorkDuration`) and never sees a JPA entity; a
+mapper translates between the two. Technical columns such as `id` therefore
+exist in the schema but not in the domain model.
 
 ## Overview
 
@@ -143,7 +143,7 @@ event twice.
 - **Schema owned by Flyway**, Hibernate only validates. See
   [ADR 0001](./adr/0001-postgresql-with-flyway.md).
 - **Optimistic locking version is infrastructure**: the `version` column lives on
-  the JPA entity. The domain aggregate carries it only as an opaque token so the
-  repository port can detect concurrent modification without leaking JPA into
-  the core.
+  the JPA entity. The domain aggregate carries the value it was loaded with as a
+  plain `long` so the repository port can detect concurrent modification, but it
+  never interprets it.
 
