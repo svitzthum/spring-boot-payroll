@@ -52,9 +52,10 @@ the value is persisted in PostgreSQL, and the behaviour is covered by tests.
    detected before the flush by comparing the version, and constraint violations
    from the flush are translated into `WorkingHoursConflictException`.
 5. **Web adapter** (`adapter.in.web`) — controller, request and response records
-   using ISO 8601 durations, a `@WholeMinutes` validation constraint, Jackson
-   configured to serialise `Duration` as an ISO string, and exception handling
-   via `@RestControllerAdvice` returning `ProblemDetail`.
+   using ISO 8601 durations, a `@WholeMinutes` validation constraint next to
+   `@DurationMin` and `@DurationMax`, Jackson configured to serialise `Duration`
+   as an ISO string, and exception handling via `@RestControllerAdvice`
+   returning `ProblemDetail`.
 6. **Tests and guardrails** — application service tests with a fake repository,
    `@WebMvcTest` for validation and status codes, Testcontainers integration
    test including a repeated call proving idempotency and a duplicate insert
@@ -122,7 +123,7 @@ Errors are returned as `application/problem+json`:
 | Unknown employee | `404 Not Found` |
 | Invalid payload or period format | `400 Bad Request` |
 | Duration with sub-minute component or negative duration | `400 Bad Request` |
-| Inactive employee, period in the future | `422 Unprocessable Entity` |
+| Inactive employee, period in the future | `400 Bad Request` |
 | Concurrent modification detected | `409 Conflict` |
 
 ## Definition of done

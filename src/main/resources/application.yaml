@@ -16,6 +16,9 @@ spring:
       datetime:
         # serialise java.time.Duration as ISO 8601 (PT152H30M) instead of numeric seconds
         write-durations-as-timestamps: false
+  mvc:
+    problemdetails:
+      enabled: true
 
 management:
   endpoints:
