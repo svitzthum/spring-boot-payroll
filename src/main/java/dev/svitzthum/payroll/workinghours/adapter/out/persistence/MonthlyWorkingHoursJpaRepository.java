@@ -14,7 +14,7 @@ interface MonthlyWorkingHoursJpaRepository extends JpaRepository<MonthlyWorkingH
 	Optional<MonthlyWorkingHoursEntity> findByEmployeeIdAndPeriod(UUID employeeId, YearMonth period);
 
 	/**
-	 * Returns the working hours for all months in the requested range, ordered by period.
+	 * Returns the working hours for all months within the given range, ordered by period.
 	 */
 	@Query("""
 			select entry from MonthlyWorkingHoursEntity entry
