@@ -27,7 +27,11 @@ the value is persisted in PostgreSQL, and the behaviour is covered by tests.
 - Scheduled import from the external time tracking system and its outbound port.
 - `time_tracking_import` and `working_hours_revision` tables.
 - Source precedence rules between manual entry and import.
-- Optimistic locking exposed to clients via `ETag` / `If-Match`.
+- Optimistic locking exposed to clients: two users who read the same month and
+  write it moments apart do not collide, because each request is consistent on
+  its own — the later write silently replaces the earlier one. Detecting that
+  would mean letting the client carry the state it has seen (`ETag` /
+  `If-Match`) and rejecting a write based on an outdated one.
 - Security, authentication and tenant isolation.
 
 ## Steps

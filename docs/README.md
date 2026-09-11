@@ -42,6 +42,8 @@ context, decision, consequences.
 | [0003](./adr/0003-store-durations-as-minutes.md) | ISO 8601 durations in the API, integer minutes in the database |
 | [0004](./adr/0004-unique-constraint-and-optimistic-locking.md) | Data integrity via unique constraint and optimistic locking |
 | [0005](./adr/0005-hexagonal-architecture.md) | Hexagonal architecture in a single Gradle module |
+| [0006](./adr/0006-manual-entry-wins-over-import.md) | Manual entry wins over the time tracking import |
+| [0007](./adr/0007-idempotent-import-without-scheduler-lock.md) | Idempotent import instead of a scheduler lock |
 
 ## Conventions
 
