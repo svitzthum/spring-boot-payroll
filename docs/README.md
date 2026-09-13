@@ -48,7 +48,4 @@ context, decision, consequences.
 
 - Documentation, code, commit messages and identifiers are written in English.
 - Documentation and the corresponding code are committed together per iteration.
-- New decisions are added as a new ADR; existing ADRs are superseded, not rewritten.
-
-
-
+- New decisions are added as a new ADR; existing ADRs are superseded, not rewritten. Factual corrections are applied in place.
