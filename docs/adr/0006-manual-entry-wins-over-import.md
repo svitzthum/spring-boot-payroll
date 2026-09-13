@@ -20,18 +20,22 @@ have something to say about the same employee and month, one has to win.
 
 ## Decision
 
-A value recorded manually is not overwritten by the import. The import writes
-its value to the change history and marks the event as skipped.
+A value recorded manually is not overwritten by the import. The import records
+the event as skipped in the import journal, together with the value the external
+system reported.
 
-This follows [ADR 0002](./0002-record-actual-hours-worked.md): manual entry is
-the correction path for missing or incomplete tracked data, so a routine job
-must not undo it.
+The change history stays untouched in that case: it tracks changes of the
+monthly value, and nothing changed.
+
+This follows from what the recorded value means (see
+[requirements](../01-requirements.md)): manual entry is the correction path for
+missing or incomplete tracked data, so a routine job must not undo it.
 
 ## Consequences
 
 - The precedence rule lives in the application layer and is covered by tests.
-- Nothing is lost: what the external system reported stays visible in the
-  history, so the skip can be explained.
+- Nothing is lost: what the external system reported stays visible in the import
+  journal, so the skip can be explained.
 - Correcting a month back to the tracked value is a manual act. An explicit
   "release for import again" would be a later feature, not a silent overwrite.
 

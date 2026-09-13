@@ -12,6 +12,7 @@ import dev.svitzthum.payroll.workinghours.application.port.in.ImportTimeTracking
 import dev.svitzthum.payroll.workinghours.application.port.in.ImportTimeTrackingUseCase.ImportSummary;
 import dev.svitzthum.payroll.workinghours.application.port.in.RecordWorkingHoursCommand;
 import dev.svitzthum.payroll.workinghours.application.port.in.RecordWorkingHoursUseCase;
+import dev.svitzthum.payroll.workinghours.application.port.out.TimeTrackingSystem;
 import dev.svitzthum.payroll.workinghours.application.port.out.WorkingHoursRepository;
 import dev.svitzthum.payroll.workinghours.domain.WorkDuration;
 import dev.svitzthum.payroll.workinghours.domain.WorkingHoursSource;
@@ -61,6 +62,10 @@ class TimeTrackingImportIntegrationTest {
 	@Autowired
 	private Clock clock;
 
+	/** Read only: lets the test assert against what the source actually reported. */
+	@Autowired
+	private TimeTrackingSystem timeTracking;
+
 	/**
 	 * Only used to provoke the collision in
 	 * {@link #retriesWhenTheOtherPathChangedTheSameMonthInBetween()}; unstubbed it is the
@@ -77,13 +82,15 @@ class TimeTrackingImportIntegrationTest {
 
 	@Test
 	void appliesTheReportedTimesAndRecordsTheRejectedOnesAsFailed() {
+		YearMonth period = lastCompletedMonth();
+
 		ImportSummary summary = this.importTimeTracking.importTimeTracking();
 
 		// two active employees and one who has left, three months each
 		assertThat(summary).isEqualTo(new ImportSummary(6, 0, 3));
-		assertThat(storedMinutes(lastCompletedMonth())).isEqualTo(reportedMinutesForAnna());
-		assertThat(storedSource(lastCompletedMonth())).isEqualTo("TIME_TRACKING");
-		assertThat(journalStatus(CLARA_REF, lastCompletedMonth())).isEqualTo("FAILED");
+		assertThat(storedMinutes(period)).isEqualTo(reportedMinutesForAnna(period));
+		assertThat(storedSource(period)).isEqualTo("TIME_TRACKING");
+		assertThat(journalStatus(CLARA_REF, period)).isEqualTo("FAILED");
 	}
 
 	@Test
@@ -110,6 +117,10 @@ class TimeTrackingImportIntegrationTest {
 		assertThat(storedMinutes(period)).isEqualTo(160 * 60);
 		assertThat(storedSource(period)).isEqualTo("MANUAL");
 		assertThat(journalStatus(ANNA_REF, period)).isEqualTo("SKIPPED");
+		// what was reported is kept in the journal, not in the change history: the
+		// monthly value never changed, so there is nothing to append
+		assertThat(journalMinutes(ANNA_REF, period)).isEqualTo(reportedMinutesForAnna(period));
+		assertThat(historyOf(period)).containsExactly("MANUAL");
 	}
 
 	@Test
@@ -144,11 +155,14 @@ class TimeTrackingImportIntegrationTest {
 		return YearMonth.now(this.clock).minusMonths(1);
 	}
 
-	/** Mirrors the formula of the simulated system, so the test pins the value it wrote. */
-	private int reportedMinutesForAnna() {
-		YearMonth period = lastCompletedMonth();
-		int seed = ANNA_REF.hashCode() * 31 + period.getYear() * 12 + period.getMonthValue();
-		return 120 * 60 + Math.floorMod(seed, 70 * 60 / 5) * 5;
+	/** Mirrors nothing: the value is read back from the same port the import used. */
+	private int reportedMinutesForAnna(YearMonth period) {
+		return this.timeTracking.fetchEvents()
+			.stream()
+			.filter((event) -> event.externalEmployeeRef().equals(ANNA_REF) && event.period().equals(period))
+			.findFirst()
+			.orElseThrow()
+			.minutesWorked();
 	}
 
 	private int storedMinutes(YearMonth period) {
@@ -176,6 +190,14 @@ class TimeTrackingImportIntegrationTest {
 		return this.jdbc.sql("select status from time_tracking_import where external_employee_ref = ? and period = ?")
 			.params(employeeReference, firstDayOf(period))
 			.query(String.class)
+			.single();
+	}
+
+	private int journalMinutes(String employeeReference, YearMonth period) {
+		return this.jdbc
+			.sql("select minutes_worked from time_tracking_import where external_employee_ref = ? and period = ?")
+			.params(employeeReference, firstDayOf(period))
+			.query(Integer.class)
 			.single();
 	}
 
