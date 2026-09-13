@@ -8,11 +8,13 @@ decision and its trade-offs are recorded in
 
 The assignment describes two independent ways to write the same data — a REST
 endpoint used by the managing director and a scheduled import from an external
-time tracking system — plus one external system to read from. That is exactly
-the situation ports and adapters is designed for: the business rule "one
-authoritative value per employee and month, written safely under concurrency"
-is implemented **once** in the application core and driven from both sides,
-instead of being duplicated in a controller and a scheduled job.
+time tracking system — plus one external system to read from. A layered design
+would share the business rule "one authoritative value per employee and month,
+written safely under concurrency" between both paths just as well. What ports
+and adapters adds is on the driven side: the core defines the interfaces to the
+database and to the time tracking system, so the fictitious external system can
+be substituted in tests and the concurrency behaviour can be exercised without
+HTTP or Spring.
 
 ```mermaid
 flowchart LR

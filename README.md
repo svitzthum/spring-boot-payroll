@@ -29,15 +29,14 @@ and period are processed concurrently.
 The application is built as a hexagon (ports and adapters): the business rules
 live in a framework-free core, the REST endpoint and the scheduled importer are
 driving adapters onto the same inbound port, and PostgreSQL and the external
-time tracking system sit behind outbound ports. See
-[docs/02-architecture.md](./docs/02-architecture.md).
+time tracking system sit behind outbound ports.
 
 For a single value per employee and month this is more structure than strictly
 necessary. It was chosen because the same data is written through two
 independent channels and has to stay consistent when they collide — that rule
 is implemented once and both adapters share it, and it can be tested without a
-database. The trade-off is discussed in
-[ADR 0005](./docs/adr/0005-hexagonal-architecture.md).
+database. This and the other trade-offs are listed under
+[core decisions](./docs/README.md#core-decisions).
 
 ## Getting started
 
@@ -93,17 +92,7 @@ curl -X PUT localhost:8080/api/v1/employees/22222222-2222-2222-2222-222222222223
 
 ## Documentation
 
-The planning documents, the data model and the architecture decision records
-live in [docs/](./docs/README.md).
-
-| Document | Content |
-| --- | --- |
-| [docs/README.md](./docs/README.md) | Index and approach |
-| [docs/01-requirements.md](./docs/01-requirements.md) | Requirements and their interpretation |
-| [docs/02-architecture.md](./docs/02-architecture.md) | Hexagonal architecture and package structure |
-| [docs/03-data-model.md](./docs/03-data-model.md) | Data model and invariants |
-| [docs/04-iteration-1-manual-entry.md](./docs/04-iteration-1-manual-entry.md) | Iteration 1: manual entry |
-| [docs/05-iteration-2-time-tracking-import.md](./docs/05-iteration-2-time-tracking-import.md) | Iteration 2: time tracking import |
-| [docs/adr/](./docs/adr) | Architecture decision records |
+How the application was planned and built, the data model, and the architecture
+decision records: [docs/](./docs/README.md).
 
 
