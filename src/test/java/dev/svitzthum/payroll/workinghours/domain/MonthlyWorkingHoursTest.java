@@ -77,6 +77,24 @@ class MonthlyWorkingHoursTest {
 	}
 
 	@Test
+	void aManuallyRecordedValueIsNotReplacedByTheImport() {
+		MonthlyWorkingHours corrected = MonthlyWorkingHours.record(EMPLOYEE, AUGUST, WorkDuration.ofHours(160),
+				WorkingHoursSource.MANUAL);
+
+		assertThat(corrected.acceptsUpdateFrom(WorkingHoursSource.TIME_TRACKING)).isFalse();
+		assertThat(corrected.acceptsUpdateFrom(WorkingHoursSource.MANUAL)).isTrue();
+	}
+
+	@Test
+	void anImportedValueMayBeReplacedByEitherSource() {
+		MonthlyWorkingHours imported = MonthlyWorkingHours.record(EMPLOYEE, AUGUST, WorkDuration.ofHours(152),
+				WorkingHoursSource.TIME_TRACKING);
+
+		assertThat(imported.acceptsUpdateFrom(WorkingHoursSource.TIME_TRACKING)).isTrue();
+		assertThat(imported.acceptsUpdateFrom(WorkingHoursSource.MANUAL)).isTrue();
+	}
+
+	@Test
 	void rejectsMissingMandatoryParts() {
 		assertThatNullPointerException()
 			.isThrownBy(() -> MonthlyWorkingHours.record(null, AUGUST, WorkDuration.ZERO, WorkingHoursSource.MANUAL));

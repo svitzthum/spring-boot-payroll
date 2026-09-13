@@ -68,6 +68,16 @@ public final class MonthlyWorkingHours {
 		this.source = Objects.requireNonNull(source, "source must not be null");
 	}
 
+	/**
+	 * Whether a value reported by the given source may replace the current one. A value
+	 * entered manually is a correction of what the time tracking system delivered, so
+	 * the import must not undo it (see ADR 0006).
+	 */
+	public boolean acceptsUpdateFrom(WorkingHoursSource source) {
+		Objects.requireNonNull(source, "source must not be null");
+		return source == WorkingHoursSource.MANUAL || this.source != WorkingHoursSource.MANUAL;
+	}
+
 	public UUID employeeId() {
 		return this.employeeId;
 	}

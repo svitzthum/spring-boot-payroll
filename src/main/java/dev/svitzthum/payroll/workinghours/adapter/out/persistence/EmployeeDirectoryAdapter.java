@@ -18,8 +18,16 @@ class EmployeeDirectoryAdapter implements EmployeeDirectory {
 
 	@Override
 	public Optional<Employee> find(UUID employeeId) {
-		return this.employees.findById(employeeId).map(entity -> new Employee(entity.getId(), entity.isActive()));
+		return this.employees.findById(employeeId).map(EmployeeDirectoryAdapter::toEmployee);
+	}
+
+	@Override
+	public Optional<Employee> findByExternalReference(String externalEmployeeRef) {
+		return this.employees.findByExternalEmployeeRef(externalEmployeeRef).map(EmployeeDirectoryAdapter::toEmployee);
+	}
+
+	private static Employee toEmployee(EmployeeEntity entity) {
+		return new Employee(entity.getId(), entity.isActive());
 	}
 
 }
-

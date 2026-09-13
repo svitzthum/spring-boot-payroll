@@ -11,8 +11,10 @@ public interface EmployeeDirectory {
 
 	Optional<Employee> find(UUID employeeId);
 
+	/** Resolves the identifier the external time tracking system uses. */
+	Optional<Employee> findByExternalReference(String externalEmployeeRef);
+
 	record Employee(UUID id, boolean active) {
 	}
 
 }
-
