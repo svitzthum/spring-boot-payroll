@@ -56,10 +56,10 @@ the value is persisted in PostgreSQL, and the behaviour is covered by tests.
    detected before the flush by comparing the version, and constraint violations
    from the flush are translated into `WorkingHoursConflictException`.
 5. **Web adapter** (`adapter.in.web`) — controller, request and response records
-   using ISO 8601 durations, a `@WholeMinutes` validation constraint next to
-   `@DurationMin` and `@DurationMax`, Jackson configured to serialise `Duration`
-   as an ISO string, and exception handling via `@RestControllerAdvice`
-   returning `ProblemDetail`.
+   using ISO 8601 durations, `@NotNull` on the payload while the value bounds
+   stay with `WorkDuration`, Jackson configured to serialise `Duration` as an ISO
+   string, and exception handling via `@RestControllerAdvice` returning
+   `ProblemDetail`.
 6. **Tests and guardrails** — application service tests with a fake repository,
    `@WebMvcTest` for validation and status codes, Testcontainers integration
    test including a repeated call proving idempotency and a duplicate insert

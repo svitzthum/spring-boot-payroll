@@ -60,8 +60,9 @@ the rest of the application never handles a raw number again.
 - `Duration.parse` rejects month and year designators itself, which removes the
   ambiguity of calendar-based durations for free.
 - Jackson must be configured to serialise durations as ISO strings rather than
-  numeric timestamps, and a custom Bean Validation constraint is needed for the
-  whole-minute and non-negative rules.
+  numeric timestamps. The whole-minute and range rules are enforced by
+  `WorkDuration` alone, whose rejection the exception handler answers with
+  `400 Bad Request` — the API does not repeat them as validation annotations.
 - Callers who think in decimal hours have to convert. Accepted: the conversion is
   trivial on their side, and it forces them to state what they mean instead of
   leaving the server to guess.

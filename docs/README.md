@@ -17,8 +17,8 @@ explicitly per iteration.
 
 | Iteration | Topic | Status |
 | --- | --- | --- |
-| 1 | Manual monthly working hours entry via REST | planned |
-| 2 | Scheduled import from external time tracking system | not started |
+| 1 | Manual monthly working hours entry via REST | done |
+| 2 | Scheduled import from external time tracking system | done |
 
 ## Documents
 
@@ -28,7 +28,7 @@ explicitly per iteration.
 | [02-architecture.md](./02-architecture.md) | Hexagonal architecture, package structure, dependency rule |
 | [03-data-model.md](./03-data-model.md) | Target data model, constraints and invariants |
 | [04-iteration-1-manual-entry.md](./04-iteration-1-manual-entry.md) | Scope and steps of iteration 1 |
-| [05-iteration-2-time-tracking-import.md](./05-iteration-2-time-tracking-import.md) | Scope of iteration 2 (placeholder) |
+| [05-iteration-2-time-tracking-import.md](./05-iteration-2-time-tracking-import.md) | Scope and steps of iteration 2 |
 
 ## Architecture Decision Records
 

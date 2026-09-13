@@ -22,10 +22,10 @@ flowchart LR
     end
 
     subgraph core["Application core"]
-        IN["Inbound ports<br/>RecordWorkingHours / GetWorkingHours"]
+        IN["Inbound ports<br/>RecordWorkingHours / GetWorkingHours / ImportTimeTracking"]
         APP["Application services"]
         DOM["Domain model<br/>MonthlyWorkingHours, WorkDuration"]
-        OUT["Outbound ports<br/>WorkingHoursRepository, EmployeeDirectory, TimeTrackingSource"]
+        OUT["Outbound ports<br/>WorkingHoursRepository, EmployeeDirectory,<br/>TimeTrackingSystem, TimeTrackingImportJournal"]
         IN --> APP --> DOM
         APP --> OUT
     end
@@ -61,9 +61,9 @@ dev.svitzthum.payroll
 │   │   └── service                     ← use case implementations, @Transactional
 │   └── adapter
 │       ├── in/web                      ← controller, DTOs, exception handling
-│       ├── in/scheduling                (iteration 2)
+│       ├── in/scheduler                ← scheduled import job (iteration 2)
 │       ├── out/persistence             ← JPA entities, Spring Data, mapper
-│       └── out/timetracking             (iteration 2)
+│       └── out/timetracking            ← simulated external system (iteration 2)
 └── shared                              ← cross-cutting configuration
 ```
 
