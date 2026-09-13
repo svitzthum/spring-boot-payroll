@@ -9,6 +9,7 @@ import java.util.UUID;
 import dev.svitzthum.payroll.workinghours.application.EmployeeNotFoundException;
 import dev.svitzthum.payroll.workinghours.application.FuturePeriodException;
 import dev.svitzthum.payroll.workinghours.application.InactiveEmployeeException;
+import dev.svitzthum.payroll.workinghours.application.ManualEntryTakesPrecedenceException;
 import dev.svitzthum.payroll.workinghours.application.port.in.GetWorkingHoursQuery;
 import dev.svitzthum.payroll.workinghours.application.port.in.RecordWorkingHoursCommand;
 import dev.svitzthum.payroll.workinghours.application.port.in.RecordWorkingHoursUseCase;
@@ -46,7 +47,7 @@ class WorkingHoursService implements RecordWorkingHoursUseCase, GetWorkingHoursQ
 	 */
 	@Override
 	@Transactional(noRollbackFor = { EmployeeNotFoundException.class, InactiveEmployeeException.class,
-			FuturePeriodException.class })
+			FuturePeriodException.class, ManualEntryTakesPrecedenceException.class })
 	public MonthlyWorkingHours recordWorkingHours(RecordWorkingHoursCommand command) {
 		Employee employee = requireEmployee(command.employeeId());
 		if (!employee.active()) {
@@ -57,13 +58,18 @@ class WorkingHoursService implements RecordWorkingHoursUseCase, GetWorkingHoursQ
 			throw new FuturePeriodException(command.period(), currentPeriod);
 		}
 		MonthlyWorkingHours monthlyWorkingHours = this.workingHours.find(command.employeeId(), command.period())
-			.map(existing -> {
-				existing.recordWorkedTime(command.workedTime(), command.source());
-				return existing;
-			})
+			.map(stored -> correct(stored, command))
 			.orElseGet(() -> MonthlyWorkingHours.record(command.employeeId(), command.period(), command.workedTime(),
 					command.source()));
 		return this.workingHours.save(monthlyWorkingHours);
+	}
+
+	private static MonthlyWorkingHours correct(MonthlyWorkingHours stored, RecordWorkingHoursCommand command) {
+		if (!stored.acceptsUpdateFrom(command.source())) {
+			throw new ManualEntryTakesPrecedenceException(command.employeeId(), command.period());
+		}
+		stored.recordWorkedTime(command.workedTime(), command.source());
+		return stored;
 	}
 
 	@Override

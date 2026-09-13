@@ -33,7 +33,8 @@ missing or incomplete tracked data, so a routine job must not undo it.
 
 ## Consequences
 
-- The precedence rule lives in the application layer and is covered by tests.
+- The use case enforces the rule, not the calling adapter. Every write path is
+  bound by it, including one that forgets to ask first.
 - Nothing is lost: what the external system reported stays visible in the import
   journal, so the skip can be explained.
 - Correcting a month back to the tracked value is a manual act. An explicit

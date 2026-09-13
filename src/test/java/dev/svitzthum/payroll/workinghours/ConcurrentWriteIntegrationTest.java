@@ -98,8 +98,8 @@ class ConcurrentWriteIntegrationTest {
 	}
 
 	/**
-	 * What the import does once it has decided that nothing manual stands in its way. The
-	 * precedence check itself lives in the event processor and has already passed here.
+	 * What the import writes once the use case has let it through — at the moment it
+	 * reads, nothing manual is stored.
 	 */
 	private void theImportRecords(WorkDuration workedTime) {
 		this.recordWorkingHours.recordWorkingHours(
@@ -107,12 +107,9 @@ class ConcurrentWriteIntegrationTest {
 	}
 
 	/**
-	 * Lets the competing write commit the next time the running use case saves, which is
-	 * the first thing that happens after it has read the month.
-	 *
-	 * <p>
-	 * Only that one save is intercepted, so the competing write itself goes through
-	 * untouched and the running write then runs into what it left behind.
+	 * Lets the competing write commit on the next save, which is the first thing the
+	 * running use case does after its read. Only that one save is intercepted, so the
+	 * competing write itself goes through untouched.
 	 */
 	private void commitsBeforeTheNextWrite(Runnable competingWrite) {
 		willAnswer((invocation) -> {

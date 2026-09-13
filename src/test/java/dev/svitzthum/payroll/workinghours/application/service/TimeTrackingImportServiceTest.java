@@ -42,8 +42,8 @@ class TimeTrackingImportServiceTest {
 	@BeforeEach
 	void setUp() {
 		this.workingHoursService = new WorkingHoursService(this.workingHours, this.employees, SEPTEMBER_2026);
-		TimeTrackingEventProcessor processor = new TimeTrackingEventProcessor(this.workingHoursService,
-				this.workingHours, this.employees, this.journal, SEPTEMBER_2026);
+		TimeTrackingEventProcessor processor = new TimeTrackingEventProcessor(this.workingHoursService, this.employees,
+				this.journal, SEPTEMBER_2026);
 		this.service = new TimeTrackingImportService(this.timeTracking, this.journal, processor);
 		this.employee = this.employees.addActiveEmployee(REFERENCE);
 	}

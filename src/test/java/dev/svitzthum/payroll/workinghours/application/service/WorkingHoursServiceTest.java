@@ -10,6 +10,7 @@ import java.util.UUID;
 import dev.svitzthum.payroll.workinghours.application.EmployeeNotFoundException;
 import dev.svitzthum.payroll.workinghours.application.FuturePeriodException;
 import dev.svitzthum.payroll.workinghours.application.InactiveEmployeeException;
+import dev.svitzthum.payroll.workinghours.application.ManualEntryTakesPrecedenceException;
 import dev.svitzthum.payroll.workinghours.application.port.in.RecordWorkingHoursCommand;
 import dev.svitzthum.payroll.workinghours.domain.MonthlyWorkingHours;
 import dev.svitzthum.payroll.workinghours.domain.WorkDuration;
@@ -68,13 +69,25 @@ class WorkingHoursServiceTest {
 	}
 
 	@Test
-	void anImportCanOverwriteAManualEntryAndTheSourceFollows() {
+	void refusesToLetTheImportOverwriteAManualEntry() {
 		this.service.recordWorkingHours(command(YearMonth.of(2026, 8), 152 * 60));
 
-		MonthlyWorkingHours imported = this.service.recordWorkingHours(new RecordWorkingHoursCommand(this.employee,
-				YearMonth.of(2026, 8), WorkDuration.ofHours(160), WorkingHoursSource.TIME_TRACKING));
+		assertThatExceptionOfType(ManualEntryTakesPrecedenceException.class)
+			.isThrownBy(() -> this.service.recordWorkingHours(new RecordWorkingHoursCommand(this.employee,
+					YearMonth.of(2026, 8), WorkDuration.ofHours(160), WorkingHoursSource.TIME_TRACKING)));
+		assertThat(this.workingHours.find(this.employee, YearMonth.of(2026, 8)).orElseThrow().workedTime())
+			.isEqualTo(WorkDuration.ofHours(152));
+	}
 
-		assertThat(imported.source()).isEqualTo(WorkingHoursSource.TIME_TRACKING);
+	@Test
+	void letsAManualEntryCorrectAnImportedValueAndTheSourceFollows() {
+		this.service.recordWorkingHours(new RecordWorkingHoursCommand(this.employee, YearMonth.of(2026, 8),
+				WorkDuration.ofHours(152), WorkingHoursSource.TIME_TRACKING));
+
+		MonthlyWorkingHours corrected = this.service.recordWorkingHours(command(YearMonth.of(2026, 8), 160 * 60));
+
+		assertThat(corrected.source()).isEqualTo(WorkingHoursSource.MANUAL);
+		assertThat(corrected.workedTime()).isEqualTo(WorkDuration.ofHours(160));
 	}
 
 	@Test
