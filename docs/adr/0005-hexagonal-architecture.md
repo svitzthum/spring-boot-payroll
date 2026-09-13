@@ -8,16 +8,19 @@
 The assignment defines two independent write paths for the same data: a REST
 endpoint used by the managing director and a scheduled import from an external
 time tracking system. It also requires data integrity when both process the same
-employee and period concurrently. A conventional controller–service–repository
-layering makes it easy for the two paths to drift apart, and it couples the
-business rules to Spring MVC and JPA, which makes the concurrency behaviour
-harder to test in isolation.
+employee and period concurrently. A shared service in a conventional
+controller–service–repository layering would serve both paths just as well. The
+difference is on the driven side: there the business rules depend on JPA and on
+the client of the external system, which makes the fictitious time tracking
+system awkward to substitute and the concurrency behaviour harder to test in
+isolation.
 
 ## Options considered
 
 - **Layered architecture (controller, service, repository)** — least code, most
-  familiar, but the domain rules end up entangled with framework types and the
-  fictitious external system is awkward to substitute in tests.
+  familiar, and sufficient for sharing the use case between both paths; but the
+  core depends on JPA and on the time tracking client instead of owning those
+  interfaces.
 - **Hexagonal architecture in a single Gradle module, boundaries expressed by
   packages** — one implementation of the use case driven by both adapters, the
   external time tracking system hidden behind an outbound port.

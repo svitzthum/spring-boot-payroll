@@ -25,17 +25,12 @@ Required deliverables:
 
 ### The recorded value is actual hours worked
 
-The assignment does not state whether the manually entered hours are contracted
-target hours or hours actually worked. We record **actual hours worked**:
-
-- Both channels describe the same fact. The manual entry and the time tracking
-  import compete for the same value, otherwise the explicitly requested
-  protection against concurrent processing "for the same period and employee"
-  would not be necessary.
-- Contracted hours would be master data attached to the employment contract.
-  They rarely change and would not be entered month by month.
-- Payroll software needs actual hours as the basis for calculating wages of
-  hourly paid employees.
+Both channels describe the same fact: the manual entry and the time tracking
+import compete for one value, otherwise the required protection against
+concurrent processing "for the same period and employee" would be pointless.
+That value is the hours actually worked — for hourly paid employees it is what
+the wage is calculated from, which is why it has to be correct per month and per
+employee rather than merely plausible.
 
 Manual entry is therefore the fallback and correction path for employees without
 time tracking, or for correcting incomplete tracked data.
