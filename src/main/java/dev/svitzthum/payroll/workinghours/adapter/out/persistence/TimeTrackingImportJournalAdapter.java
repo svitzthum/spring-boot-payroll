@@ -2,6 +2,7 @@ package dev.svitzthum.payroll.workinghours.adapter.out.persistence;
 
 import dev.svitzthum.payroll.workinghours.application.EventAlreadyImportedException;
 import dev.svitzthum.payroll.workinghours.application.port.out.TimeTrackingImportJournal;
+import org.hibernate.exception.ConstraintViolationException;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
@@ -14,6 +15,8 @@ import org.springframework.stereotype.Component;
  */
 @Component
 class TimeTrackingImportJournalAdapter implements TimeTrackingImportJournal {
+
+	private static final String UNIQUE_EVENT_CONSTRAINT = "uk_time_tracking_import_event";
 
 	private final TimeTrackingImportJpaRepository entries;
 
@@ -37,9 +40,17 @@ class TimeTrackingImportJournalAdapter implements TimeTrackingImportJournal {
 			this.entries.saveAndFlush(entity);
 		}
 		catch (DataIntegrityViolationException ex) {
+			// any other violation would drop the event instead of recording it
+			if (!violatesUniqueEventId(ex)) {
+				throw ex;
+			}
 			throw new EventAlreadyImportedException(event.externalEventId(), ex);
 		}
 	}
 
-}
+	private static boolean violatesUniqueEventId(DataIntegrityViolationException ex) {
+		return ex.getCause() instanceof ConstraintViolationException violation
+				&& UNIQUE_EVENT_CONSTRAINT.equalsIgnoreCase(violation.getConstraintName());
+	}
 
+}

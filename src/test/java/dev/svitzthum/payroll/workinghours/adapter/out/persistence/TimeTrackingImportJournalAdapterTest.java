@@ -61,10 +61,30 @@ class TimeTrackingImportJournalAdapterTest {
 			.isThrownBy(() -> this.journal.record(event("TT-1001-2026-08", ImportStatus.APPLIED, null)));
 	}
 
+	@Test
+	void recordsAValueTheDomainWouldReject() {
+		this.journal.record(event("TT-1001-2026-08", -5, ImportStatus.FAILED, "worked time must not be negative"));
+
+		TimeTrackingImportEntity stored = this.entries.findByExternalEventId("TT-1001-2026-08").orElseThrow();
+		assertThat(stored.getMinutesWorked()).isEqualTo(-5);
+		assertThat(stored.getStatus()).isEqualTo(ImportStatus.FAILED);
+	}
+
+	@Test
+	void recordsAValueAboveThePlausibleUpperBound() {
+		this.journal.record(event("TT-1001-2026-08", 50_000, ImportStatus.FAILED, "worked time must not exceed"));
+
+		assertThat(this.entries.findByExternalEventId("TT-1001-2026-08").orElseThrow().getMinutesWorked())
+			.isEqualTo(50_000);
+	}
+
 	private static ImportedEvent event(String externalEventId, ImportStatus status, String detail) {
+		return event(externalEventId, 9120, status, detail);
+	}
+
+	private static ImportedEvent event(String externalEventId, int minutesWorked, ImportStatus status, String detail) {
 		String employeeRef = externalEventId.substring(0, externalEventId.indexOf("-2"));
-		return new ImportedEvent(externalEventId, employeeRef, AUGUST, 9120, status, detail, Instant.now());
+		return new ImportedEvent(externalEventId, employeeRef, AUGUST, minutesWorked, status, detail, Instant.now());
 	}
 
 }
-

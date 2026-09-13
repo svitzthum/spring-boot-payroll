@@ -156,7 +156,6 @@ redelivery, a retry after a failure or a second application instance harmless
 
 Constraints: `unique (external_event_id)`,
 `check (period = date_trunc('month', period))`,
-`check (minutes_worked between 0 and 44640)`,
 `check (status in ('APPLIED', 'SKIPPED', 'FAILED'))`.
 
 The status distinguishes the three outcomes: `APPLIED` — the monthly value was
@@ -166,9 +165,10 @@ journal therefore answers "what arrived and what happened to it", while
 `working_hours_revision` answers "how did the value change". A skipped event
 produces a journal entry but no revision.
 
-There is no foreign key to `employee`: the journal records what the external
-system sent, including references that cannot be resolved. Resolving them is the
-job of the import, not a constraint of the table.
+The journal records what the external system sent, so neither a foreign key to
+`employee` nor a bound on `minutes_worked` constrains it — an unresolvable
+reference and an implausible value are precisely the cases a `FAILED` entry
+exists for. Judging them is the job of the import, not of the table.
 
 ## Design decisions
 

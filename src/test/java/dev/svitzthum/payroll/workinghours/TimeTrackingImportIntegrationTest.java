@@ -13,6 +13,7 @@ import dev.svitzthum.payroll.workinghours.application.port.in.ImportTimeTracking
 import dev.svitzthum.payroll.workinghours.application.port.in.RecordWorkingHoursCommand;
 import dev.svitzthum.payroll.workinghours.application.port.in.RecordWorkingHoursUseCase;
 import dev.svitzthum.payroll.workinghours.application.port.out.TimeTrackingSystem;
+import dev.svitzthum.payroll.workinghours.application.port.out.TimeTrackingSystem.TimeTrackingEvent;
 import dev.svitzthum.payroll.workinghours.application.port.out.WorkingHoursRepository;
 import dev.svitzthum.payroll.workinghours.domain.WorkDuration;
 import dev.svitzthum.payroll.workinghours.domain.WorkingHoursSource;
@@ -27,6 +28,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.willReturn;
 import static org.mockito.BDDMockito.willThrow;
 
 /**
@@ -62,8 +64,8 @@ class TimeTrackingImportIntegrationTest {
 	@Autowired
 	private Clock clock;
 
-	/** Read only: lets the test assert against what the source actually reported. */
-	@Autowired
+	/** Read only in most tests: lets them assert against what the source reported. */
+	@MockitoSpyBean
 	private TimeTrackingSystem timeTracking;
 
 	/**
@@ -144,6 +146,21 @@ class TimeTrackingImportIntegrationTest {
 		recordManually(period, WorkDuration.ofHours(160));
 
 		assertThat(historyOf(period)).containsExactly("TIME_TRACKING", "MANUAL");
+	}
+
+	@Test
+	void recordsAnImplausibleValueAsFailedInsteadOfRetryingItForever() {
+		YearMonth period = lastCompletedMonth();
+		willReturn(List.of(new TimeTrackingEvent("evt-broken", ANNA_REF, period, -5))).given(this.timeTracking)
+			.fetchEvents();
+
+		ImportSummary first = this.importTimeTracking.importTimeTracking();
+		ImportSummary second = this.importTimeTracking.importTimeTracking();
+
+		assertThat(first).isEqualTo(new ImportSummary(0, 0, 1));
+		assertThat(second.total()).as("the event is settled, not picked up again").isZero();
+		assertThat(journalStatus(ANNA_REF, period)).isEqualTo("FAILED");
+		assertThat(journalMinutes(ANNA_REF, period)).isEqualTo(-5);
 	}
 
 	private void recordManually(YearMonth period, WorkDuration workedTime) {
