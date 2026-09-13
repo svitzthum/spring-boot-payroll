@@ -60,6 +60,7 @@ erDiagram
         date period
         int minutes_worked
         text status
+        timestamptz imported_at
     }
 ```
 
@@ -115,15 +116,59 @@ Constraints:
 
 ### `working_hours_revision` (iteration 2)
 
-Append-only change history: which source changed the value when and to what.
-Makes corrections traceable and gives the concurrency story a visible audit
-trail.
+Append-only change history: which source set which value when. Makes corrections
+traceable and gives the precedence rule of
+[ADR 0006](./adr/0006-manual-entry-wins-over-import.md) a visible audit trail.
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | `uuid` | primary key |
+| `working_hours_id` | `uuid` | FK to `monthly_working_hours`, `on delete cascade` |
+| `minutes_worked` | `integer` | the value as it was after the change |
+| `source` | `text` | `MANUAL` or `TIME_TRACKING` |
+| `changed_at` | `timestamptz` | not null |
+
+Constraints: `check (minutes_worked between 0 and 44640)`,
+`check (source in ('MANUAL', 'TIME_TRACKING'))`, index on
+`(working_hours_id, changed_at)` for reading the history of one month.
+
+Rows are never updated or deleted; a correction appends a new row. The current
+value stays in `monthly_working_hours`, so reading the payroll relevant figure
+never has to aggregate the history.
 
 ### `time_tracking_import` (iteration 2)
 
-Journal of received import events with a unique `external_event_id`, providing
-idempotency for the scheduled import even if the external system delivers an
-event twice.
+Journal of the events received from the external time tracking system. Its
+primary purpose is idempotency: the unique `external_event_id` is what makes a
+redelivery, a retry after a failure or a second application instance harmless
+([ADR 0007](./adr/0007-idempotent-import-without-scheduler-lock.md)).
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | `uuid` | primary key |
+| `external_event_id` | `text` | unique, the identity of the event in the source system |
+| `external_employee_ref` | `text` | reference used by the external system, resolved via `employee.external_employee_ref` |
+| `period` | `date` | first day of the month |
+| `minutes_worked` | `integer` | the reported value |
+| `status` | `text` | `APPLIED`, `SKIPPED` or `FAILED` |
+| `imported_at` | `timestamptz` | not null |
+| `detail` | `text` | nullable, why an event was skipped or failed |
+
+Constraints: `unique (external_event_id)`,
+`check (period = date_trunc('month', period))`,
+`check (minutes_worked between 0 and 44640)`,
+`check (status in ('APPLIED', 'SKIPPED', 'FAILED'))`.
+
+The status distinguishes the three outcomes: `APPLIED` — the monthly value was
+written; `SKIPPED` — a manual entry took precedence; `FAILED` — the event could
+not be processed, for example because the employee reference is unknown. The
+journal therefore answers "what arrived and what happened to it", while
+`working_hours_revision` answers "how did the value change". A skipped event
+produces a journal entry but no revision.
+
+There is no foreign key to `employee`: the journal records what the external
+system sent, including references that cannot be resolved. Resolving them is the
+job of the import, not a constraint of the table.
 
 ## Design decisions
 
@@ -146,4 +191,8 @@ event twice.
   the JPA entity. The domain aggregate carries the value it was loaded with as a
   plain `long` so the repository port can detect concurrent modification, but it
   never interprets it.
+- **Demo data ships as a migration** so the application has something to work
+  with right after startup, which keeps the demo and the manual tests simple. In
+  a production system this belongs in a profile specific location or a seeding
+  job rather than in the migration history.
 
