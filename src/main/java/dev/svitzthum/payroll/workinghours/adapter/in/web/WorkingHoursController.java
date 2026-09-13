@@ -13,8 +13,6 @@ import dev.svitzthum.payroll.workinghours.domain.WorkingHoursSource;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 
-import org.hibernate.validator.constraints.time.DurationMax;
-import org.hibernate.validator.constraints.time.DurationMin;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -69,12 +67,11 @@ class WorkingHoursController {
 
 	/**
 	 * Payload of the upsert: the absolute time worked in the month, as an ISO 8601
-	 * duration such as {@code PT152H30M}. The bounds mirror the invariants of
-	 * {@code WorkDuration} so a client gets a field level message instead of a generic
-	 * bad request.
+	 * duration such as {@code PT152H30M}. The bounds are not repeated here — the
+	 * invariants of {@code WorkDuration} are the single source of truth and surface as a
+	 * {@code 400} through the exception handler.
 	 */
-	record RecordWorkingHoursRequest(
-			@NotNull @DurationMin(seconds = 0) @DurationMax(days = 31) @WholeMinutes Duration workedTime) {
+	record RecordWorkingHoursRequest(@NotNull Duration workedTime) {
 	}
 
 }

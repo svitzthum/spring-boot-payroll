@@ -38,8 +38,7 @@ target hours or hours actually worked. We record **actual hours worked**:
   hourly paid employees.
 
 Manual entry is therefore the fallback and correction path for employees without
-time tracking, or for correcting incomplete tracked data. See
-[ADR 0002](./adr/0002-record-actual-hours-worked.md).
+time tracking, or for correcting incomplete tracked data.
 
 ### Derived functional rules
 

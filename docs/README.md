@@ -38,7 +38,6 @@ context, decision, consequences.
 | ADR | Decision |
 | --- | --- |
 | [0001](./adr/0001-postgresql-with-flyway.md) | PostgreSQL with Flyway migrations instead of Hibernate schema generation |
-| [0002](./adr/0002-record-actual-hours-worked.md) | The recorded value is actual hours worked, not contracted hours |
 | [0003](./adr/0003-store-durations-as-minutes.md) | ISO 8601 durations in the API, integer minutes in the database |
 | [0004](./adr/0004-unique-constraint-and-optimistic-locking.md) | Data integrity via unique constraint and optimistic locking |
 | [0005](./adr/0005-hexagonal-architecture.md) | Hexagonal architecture in a single Gradle module |

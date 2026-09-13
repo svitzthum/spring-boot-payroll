@@ -56,10 +56,6 @@ class WorkDurationTest {
 			.hasSameHashCodeAs(WorkDuration.ofMinutes(480));
 	}
 
-	@Test
-	void isComparable() {
-		assertThat(WorkDuration.ofHours(8)).isGreaterThan(WorkDuration.ofHours(7));
-	}
 
 	@Test
 	void printsAsIsoDuration() {

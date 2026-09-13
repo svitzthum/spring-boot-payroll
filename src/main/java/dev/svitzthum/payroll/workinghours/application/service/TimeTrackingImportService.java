@@ -1,10 +1,5 @@
 package dev.svitzthum.payroll.workinghours.application.service;
 
-import java.util.EnumMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
 import dev.svitzthum.payroll.workinghours.application.EventAlreadyImportedException;
 import dev.svitzthum.payroll.workinghours.application.ImportStatus;
 import dev.svitzthum.payroll.workinghours.application.WorkingHoursConflictException;
@@ -42,33 +37,41 @@ class TimeTrackingImportService implements ImportTimeTrackingUseCase {
 
 	@Override
 	public ImportSummary importTimeTracking() {
-		List<TimeTrackingEvent> events = this.timeTracking.fetchEvents();
-		Map<ImportStatus, Integer> counts = new EnumMap<>(ImportStatus.class);
-		for (TimeTrackingEvent event : events) {
-			process(event).ifPresent(status -> counts.merge(status, 1, Integer::sum));
+		int applied = 0;
+		int skipped = 0;
+		int failed = 0;
+		for (TimeTrackingEvent event : this.timeTracking.fetchEvents()) {
+			switch (process(event)) {
+				case APPLIED -> applied++;
+				case SKIPPED -> skipped++;
+				case FAILED -> failed++;
+				case null -> {
+					// already journalled or deferred, counts towards nothing
+				}
+			}
 		}
-		ImportSummary summary = new ImportSummary(counts.getOrDefault(ImportStatus.APPLIED, 0),
-				counts.getOrDefault(ImportStatus.SKIPPED, 0), counts.getOrDefault(ImportStatus.FAILED, 0));
+		ImportSummary summary = new ImportSummary(applied, skipped, failed);
 		logger.debug("imported time tracking events: " + summary);
 		return summary;
 	}
 
-	private Optional<ImportStatus> process(TimeTrackingEvent event) {
+	/** @return the status the event ended in, or {@code null} if it was not processed */
+	private ImportStatus process(TimeTrackingEvent event) {
 		if (this.journal.contains(event.externalEventId())) {
-			return Optional.empty();
+			return null;
 		}
 		try {
-			return Optional.of(this.processor.process(event));
+			return this.processor.process(event);
 		}
 		catch (EventAlreadyImportedException ex) {
 			// another instance processed the same event in the meantime
-			return Optional.empty();
+			return null;
 		}
 		catch (WorkingHoursConflictException ex) {
 			// the retries did not settle it; nothing was written, so the next run picks
 			// the event up again
 			logger.info("deferring event " + event.externalEventId() + " after a concurrent modification");
-			return Optional.empty();
+			return null;
 		}
 	}
 

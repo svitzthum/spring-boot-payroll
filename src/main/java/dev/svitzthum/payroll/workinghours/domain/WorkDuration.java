@@ -19,7 +19,7 @@ import java.util.Objects;
  *
  * @param minutes whole minutes worked, between {@code 0} and {@link #MAX_MINUTES}
  */
-public record WorkDuration(int minutes) implements Comparable<WorkDuration> {
+public record WorkDuration(int minutes) {
 
 	/** 31 days expressed in minutes: the longest month that can physically be worked. */
 	public static final int MAX_MINUTES = 31 * 24 * 60;
@@ -65,14 +65,6 @@ public record WorkDuration(int minutes) implements Comparable<WorkDuration> {
 		return Duration.ofMinutes(this.minutes);
 	}
 
-	public boolean isZero() {
-		return this.minutes == 0;
-	}
-
-	@Override
-	public int compareTo(WorkDuration other) {
-		return Integer.compare(this.minutes, other.minutes);
-	}
 
 	@Override
 	public String toString() {
