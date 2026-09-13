@@ -82,6 +82,18 @@ class WorkingHoursPersistenceAdapter implements WorkingHoursRepository {
 				|| entity.getLastSource() != workingHours.source();
 	}
 
+	/**
+	 * Guards what the version column alone cannot: this method reloads the row before
+	 * writing, so the caller's aggregate may be older than what is now stored. Two cases
+	 * matter, and both are reachable when the two write paths collide.
+	 *
+	 * <p>
+	 * A caller that read version 3 while version 4 is stored must not have its value
+	 * applied silently. And a caller whose aggregate is new — it found no row — must not
+	 * overwrite a row that another writer inserted in the meantime: the reload would find
+	 * that row and turn the intended insert into an update, which the unique constraint
+	 * cannot catch because no second row is written.
+	 */
 	private static void requireExpectedVersion(MonthlyWorkingHours workingHours, MonthlyWorkingHoursEntity entity) {
 		Optional<Long> stored = Optional.ofNullable(entity.getVersion());
 		if (!workingHours.version().equals(stored)) {
