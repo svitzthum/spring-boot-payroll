@@ -32,6 +32,12 @@ class WorkingHoursPersistenceAdapterTest {
 	@Autowired
 	private WorkingHoursPersistenceAdapter adapter;
 
+	@Autowired
+	private MonthlyWorkingHoursJpaRepository entities;
+
+	@Autowired
+	private WorkingHoursRevisionJpaRepository revisions;
+
 	@Test
 	void storesAndReadsBackTheMonthlyValue() {
 		this.adapter.save(newEntry(YearMonth.of(2026, 8), 152 * 60));
@@ -102,6 +108,36 @@ class WorkingHoursPersistenceAdapterTest {
 			.isThrownBy(() -> this.adapter.save(readByTheImport));
 		assertThat(this.adapter.find(EMPLOYEE, august).orElseThrow().workedTime())
 			.isEqualTo(WorkDuration.ofHours(160));
+	}
+
+	@Test
+	void recordsEveryChangeOfTheValueInTheHistory() {
+		YearMonth august = YearMonth.of(2026, 8);
+		MonthlyWorkingHours stored = this.adapter.save(newEntry(august, 152 * 60));
+		stored.recordWorkedTime(WorkDuration.ofHours(160), WorkingHoursSource.TIME_TRACKING);
+		this.adapter.save(stored);
+
+		List<WorkingHoursRevisionEntity> history = this.revisions
+			.findByWorkingHoursIdOrderByChangedAt(this.entities.findByEmployeeIdAndPeriod(EMPLOYEE, august)
+				.orElseThrow()
+				.getId());
+
+		assertThat(history).extracting(WorkingHoursRevisionEntity::getMinutesWorked)
+			.containsExactly(152 * 60, 160 * 60);
+		assertThat(history).extracting(WorkingHoursRevisionEntity::getSource)
+			.containsExactly(WorkingHoursSource.MANUAL, WorkingHoursSource.TIME_TRACKING);
+		assertThat(history).allSatisfy(revision -> assertThat(revision.getChangedAt()).isNotNull());
+	}
+
+	@Test
+	void doesNotAddToTheHistoryWhenNothingChanged() {
+		YearMonth august = YearMonth.of(2026, 8);
+		MonthlyWorkingHours stored = this.adapter.save(newEntry(august, 152 * 60));
+		this.adapter.save(stored);
+
+		assertThat(this.revisions.findByWorkingHoursIdOrderByChangedAt(
+				this.entities.findByEmployeeIdAndPeriod(EMPLOYEE, august).orElseThrow().getId()))
+			.hasSize(1);
 	}
 
 	private static MonthlyWorkingHours newEntry(YearMonth period, int minutes) {

@@ -17,14 +17,22 @@ import org.springframework.stereotype.Component;
  * Implements the outbound port on top of JPA and turns the two database level guards —
  * the unique constraint on (employee, period) and the version column — into the domain
  * level {@link WorkingHoursConflictException}.
+ *
+ * <p>
+ * Every change of the stored value also appends a revision, so it stays visible which
+ * source set which value when.
  */
 @Component
 class WorkingHoursPersistenceAdapter implements WorkingHoursRepository {
 
 	private final MonthlyWorkingHoursJpaRepository entities;
 
-	WorkingHoursPersistenceAdapter(MonthlyWorkingHoursJpaRepository entities) {
+	private final WorkingHoursRevisionJpaRepository revisions;
+
+	WorkingHoursPersistenceAdapter(MonthlyWorkingHoursJpaRepository entities,
+			WorkingHoursRevisionJpaRepository revisions) {
 		this.entities = entities;
+		this.revisions = revisions;
 	}
 
 	@Override
@@ -47,15 +55,31 @@ class WorkingHoursPersistenceAdapter implements WorkingHoursRepository {
 		MonthlyWorkingHoursEntity entity = this.entities.findByEmployeeIdAndPeriod(employeeId, period)
 			.orElseGet(() -> new MonthlyWorkingHoursEntity(employeeId, period));
 		requireExpectedVersion(workingHours, entity);
+		boolean changed = changesTheStoredValue(workingHours, entity);
 		WorkingHoursMapper.applyTo(workingHours, entity);
+		MonthlyWorkingHoursEntity saved;
 		try {
 			// flush here so a conflict surfaces as a failure of this call rather than of
 			// the surrounding commit
-			return WorkingHoursMapper.toDomain(this.entities.saveAndFlush(entity));
+			saved = this.entities.saveAndFlush(entity);
 		}
 		catch (OptimisticLockingFailureException | DataIntegrityViolationException ex) {
 			throw new WorkingHoursConflictException(employeeId, period, ex);
 		}
+		if (changed) {
+			this.revisions.save(new WorkingHoursRevisionEntity(saved.getId(), saved.getMinutesWorked(),
+					saved.getLastSource()));
+		}
+		return WorkingHoursMapper.toDomain(saved);
+	}
+
+	/**
+	 * Repeating a call with the value that is already stored is a legitimate upsert, but
+	 * it is not a change and must not show up in the history.
+	 */
+	private static boolean changesTheStoredValue(MonthlyWorkingHours workingHours, MonthlyWorkingHoursEntity entity) {
+		return entity.getVersion() == null || entity.getMinutesWorked() != workingHours.workedTime().minutes()
+				|| entity.getLastSource() != workingHours.source();
 	}
 
 	private static void requireExpectedVersion(MonthlyWorkingHours workingHours, MonthlyWorkingHoursEntity entity) {

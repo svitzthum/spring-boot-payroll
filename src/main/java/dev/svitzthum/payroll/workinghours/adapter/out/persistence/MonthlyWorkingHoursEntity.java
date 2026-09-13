@@ -66,6 +66,10 @@ class MonthlyWorkingHoursEntity {
 		this.period = period;
 	}
 
+	UUID getId() {
+		return this.id;
+	}
+
 	UUID getEmployeeId() {
 		return this.employeeId;
 	}

@@ -26,6 +26,16 @@ management:
       exposure:
         include: health,info
 
+payroll:
+  import:
+    enabled: true
+    initial-delay: 10s
+    interval: 5m
+  time-tracking:
+    # identifiers of the demo employees in the fictitious external system
+    employee-references: TT-1001,TT-1002,TT-1003
+    months: 3
+
 logging:
   level:
     dev.svitzthum.payroll: DEBUG

@@ -39,8 +39,14 @@ class WorkingHoursService implements RecordWorkingHoursUseCase, GetWorkingHoursQ
 		this.clock = clock;
 	}
 
+	/**
+	 * The rejections below happen before anything is written, so they must not mark the
+	 * transaction for rollback: the import calls this method inside its own transaction
+	 * and goes on to journal the rejected event.
+	 */
 	@Override
-	@Transactional
+	@Transactional(noRollbackFor = { EmployeeNotFoundException.class, InactiveEmployeeException.class,
+			FuturePeriodException.class })
 	public MonthlyWorkingHours recordWorkingHours(RecordWorkingHoursCommand command) {
 		Employee employee = requireEmployee(command.employeeId());
 		if (!employee.active()) {

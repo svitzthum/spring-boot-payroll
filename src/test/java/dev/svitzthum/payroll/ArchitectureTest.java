@@ -53,5 +53,13 @@ class ArchitectureTest {
 		.areAnnotatedWith("jakarta.persistence.Entity")
 		.because("nothing outside the persistence adapter may see a JPA entity");
 
+	@ArchTest
+	static final ArchRule drivingAdaptersDoNotKnowEachOther = noClasses().that()
+		.resideInAPackage("..adapter.in.scheduler..")
+		.should()
+		.dependOnClassesThat()
+		.resideInAPackage("..adapter.in.web..")
+		.because("the scheduler and the web adapter are independent ways into the same use cases");
+
 }
 

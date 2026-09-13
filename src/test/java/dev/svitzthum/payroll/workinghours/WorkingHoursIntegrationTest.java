@@ -4,7 +4,6 @@ import java.util.UUID;
 
 import dev.svitzthum.payroll.TestcontainersConfiguration;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,12 +19,13 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 /**
  * Drives the whole hexagon over HTTP against a real PostgreSQL: web adapter, application
- * service, persistence adapter and the constraints of the schema.
+ * service, persistence adapter and the constraints of the schema. The scheduled import is
+ * switched off so it cannot write rows while these tests count them.
  */
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+		properties = "payroll.import.enabled=false")
 @AutoConfigureRestTestClient
 @Import(TestcontainersConfiguration.class)
-@Disabled("re-enable in iteration 2 step 4: the time tracking ports have no adapter yet")
 class WorkingHoursIntegrationTest {
 
 	/** Employees from V2__demo_data.sql. */
