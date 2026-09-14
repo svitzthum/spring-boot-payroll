@@ -32,10 +32,11 @@ driving adapters onto the same inbound port, and PostgreSQL and the external
 time tracking system sit behind outbound ports.
 
 For a single value per employee and month this is more structure than strictly
-necessary. It was chosen because the same data is written through two
-independent channels and has to stay consistent when they collide — that rule
-is implemented once and both adapters share it, and it can be tested without a
-database. This and the other trade-offs are listed under
+necessary. It was chosen for two reasons: every write enters through an inbound
+port, so neither adapter can reach the store on its own and skip the rules the
+use case applies. And the business rules can be exercised without Spring or a
+database, because the core declares its own narrow ports. This and the other
+trade-offs are listed under
 [core decisions](./docs/README.md#core-decisions).
 
 ## Getting started

@@ -61,5 +61,14 @@ class ArchitectureTest {
 		.resideInAPackage("..adapter.in.web..")
 		.because("the scheduler and the web adapter are independent ways into the same use cases");
 
+	@ArchTest
+	static final ArchRule drivingAdaptersOnlyEnterThroughAUseCase = noClasses().that()
+		.resideInAPackage("..adapter.in..")
+		.should()
+		.dependOnClassesThat()
+		.resideInAnyPackage("..application.port.out..", "..application.service..")
+		.because("every write goes through an inbound port, so no adapter can reach the store "
+				+ "on its own and skip the rules the use case applies");
+
 }
 

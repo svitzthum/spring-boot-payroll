@@ -6,15 +6,24 @@ decision and its trade-offs are recorded in
 
 ## Why it fits this assignment
 
-The assignment describes two independent ways to write the same data — a REST
-endpoint used by the managing director and a scheduled import from an external
-time tracking system — plus one external system to read from. A layered design
-would share the business rule "one authoritative value per employee and month,
-written safely under concurrency" between both paths just as well. What ports
-and adapters adds is on the driven side: the core defines the interfaces to the
-database and to the time tracking system, so the fictitious external system can
-be substituted in tests and the concurrency behaviour can be exercised without
-HTTP or Spring.
+Two independent ways to write the same data — a REST endpoint and a scheduled
+import — plus one external system to read from. A layered design would share
+the business rule between both paths just as well. What the ports add:
+
+- **Every write enters through an inbound port.** Neither adapter can reach the
+  store on its own and skip the precedence and conflict rules — `ArchitectureTest`
+  fails the build if one tries.
+- **The business rules can be exercised without Spring or a database.** No
+  framework types in `domain` and `application`, and ports narrow enough to
+  implement in memory, so a use case can be instantiated with `new` in tests.
+- **The domain model is not shaped by the ORM.** The aggregate stays final and
+  factory-built, and the locking version stays an infrastructure concern.
+- **The external system exists only as a substitute.** It is fictitious and has
+  to be simulated either way; the port decides whether that stand-in is one
+  adapter among others or the production code path itself.
+
+Replaceability is claimed for that system only — PostgreSQL is a fixed choice
+([ADR 0001](./adr/0001-postgresql-with-flyway.md)).
 
 ```mermaid
 flowchart LR
@@ -74,14 +83,14 @@ dev.svitzthum.payroll
 - `domain` depends on nothing but the JDK. No Spring, no JPA, no Jackson.
 - `application` depends on `domain` and on its own ports only.
 - `adapter` depends on `application` and `domain`; adapters never depend on
-  each other.
+  each other, and a driving adapter sees inbound ports only — never the
+  repository port or a service implementation.
 - Nothing outside `adapter.out.persistence` sees a JPA entity, nothing outside
   `adapter.in.web` sees a DTO.
 
-An ArchUnit test asserts these rules so a violation fails the build instead of
-being caught in review.
+`ArchitectureTest` asserts these rules as part of the normal test run.
 
-## Consequences accepted
+## Costs accepted
 
 - **Two models for the monthly value**: a domain aggregate and a JPA entity,
   with an explicit mapper. This costs a mapper class but keeps the persistence
