@@ -7,9 +7,15 @@ services:
       POSTGRES_PASSWORD: payroll
     ports:
       - '5432:5432'
+    volumes:
+      - 'payroll-data:/var/lib/postgresql'
     healthcheck:
       test: [ 'CMD-SHELL', 'pg_isready -U payroll -d payroll' ]
       interval: 5s
       timeout: 5s
       retries: 10
 
+# Named instead of anonymous, so the state is explicit: it survives `docker compose down`
+# and is discarded by `docker compose down -v`, which is how the demo is reset.
+volumes:
+  payroll-data:
